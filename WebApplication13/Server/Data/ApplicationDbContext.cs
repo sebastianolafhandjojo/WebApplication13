@@ -1,6 +1,7 @@
 ﻿using IdentityServer4.EntityFramework.Options;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,6 @@ namespace WebApplication13.Server.Data
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
         }
+        
     }
 }

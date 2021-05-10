@@ -26,9 +26,17 @@ namespace WebApplication13.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //services.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseSqlServer(
+            //        Configuration.GetConnectionString("DefaultConnection")));
+            // "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=aspnet-WebApplication13.Server-F5E8A8A5-95FA-4C5A-A090-147DF502F0ED;Trusted_Connection=True;MultipleActiveResultSets=true"
+
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlite
+                (
+                    Configuration.GetConnectionString("DefaultConnection")
+                ));
+
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
