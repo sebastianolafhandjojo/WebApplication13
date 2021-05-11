@@ -21,6 +21,16 @@ namespace WebApplication13.Server
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+
+
+#if RELEASE
+                    string dockerPort = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+                    //Console.Write($"Docker Port: {dockerPort}");
+                    
+                    string useUrl = $"http://*:{dockerPort}";                    
+                    webBuilder.UseUrls(useUrl);
+#endif
+
                 });
     }
 }
