@@ -5,6 +5,7 @@
     <UserSecretsId>WebApplication13.Server-F5E8A8A5-95FA-4C5A-A090-147DF502F0ED</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..</DockerfileContext>
+    <DockerfileTag>mytag</DockerfileTag>
   </PropertyGroup>
 
   <ItemGroup>
