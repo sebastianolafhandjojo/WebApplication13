@@ -17,7 +17,7 @@ namespace WebApplication13.Server
 {
     public class Startup
     {
-        private readonly string _corspolicy = "CorsPolicy";
+       
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -29,48 +29,67 @@ namespace WebApplication13.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddDbContext<ApplicationDbContext>(options =>
-            //    options.UseSqlServer(
-            //        Configuration.GetConnectionString("DefaultConnection")));
-            // "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=aspnet-WebApplication13.Server-F5E8A8A5-95FA-4C5A-A090-147DF502F0ED;Trusted_Connection=True;MultipleActiveResultSets=true"
-
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite
-                (
-                    Configuration.GetConnectionString("DefaultConnection")
-                ));
-
-            services
-                .AddHttpsRedirection(options => { options.HttpsPort = 443; })
-                .AddMvcCore()
-                .AddCors(options =>
-                {
-                    options.AddPolicy(_corspolicy,
-                        builder => builder.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
-                });
-
-            services.Configure<ForwardedHeadersOptions>(options =>
+      
+            if (Settings.IsDeployToIIS)
             {
-                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-                                           ForwardedHeaders.XForwardedProto;
-                options.KnownNetworks.Clear();
-                options.KnownProxies.Clear();
-            });
+                services.Configure<IISServerOptions>(options =>
+                {
+                    options.AutomaticAuthentication = false;
+                    //options.AuthenticationDisplayName = null;
+                    //options.AllowSynchronousIO = false;
+                    //options.MaxRequestBodySize = 30000000;
+                });
+            }
+            if (Settings.IdentityServerDB.Equals(IdentityServerDBEnum.SqlServer))
+            {
+                services.AddDbContext<ApplicationDbContext> (options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
+                );                
+            }
+            else if (Settings.IdentityServerDB.Equals(IdentityServerDBEnum.Sqlite))
+            {
+                services.AddDbContext<ApplicationDbContext>(options =>
+                    options.UseSqlite (Configuration.GetConnectionString("DefaultConnection2"))
+                );
+            }
+            else
+            {
+                Console.WriteLine("Doesn't user IdentityServer DB");
+            }
+            
+            //services.AddHttpsRedirection(options => { options.HttpsPort = 5001; });
+            //services.AddMvcCore();
 
-
+            if (Settings.UseCors)
+            {
+                services
+                    .AddCors(options =>
+                    {
+                        options.AddPolicy(Settings.CorsPolicy,
+                            builder => builder
+                            .AllowAnyOrigin()
+                            .AllowAnyMethod()
+                            .AllowAnyHeader());
+                    });
+            }
+            //services.Configure<ForwardedHeadersOptions>(options =>
+            //{
+            //    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+            //                               ForwardedHeaders.XForwardedProto;
+            //    options.KnownNetworks.Clear();
+            //    options.KnownProxies.Clear();
+            //});
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services.AddIdentityServer()
+            services.AddIdentityServer()            
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
             services.AddAuthentication()
-                .AddIdentityServerJwt();
+                .AddIdentityServerJwt();            
 
             services.AddControllersWithViews();
             services.AddRazorPages();
@@ -79,15 +98,7 @@ namespace WebApplication13.Server
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-       
-
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DYNO")))
-            {
-                //Console.WriteLine("Use https redirection");
-                app.UseForwardedHeaders();
-                app.UseHttpsRedirection();
-            }
-
+          
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -101,12 +112,22 @@ namespace WebApplication13.Server
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            //if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DYNO")))
+            //{
+            //Console.WriteLine("Use https redirection");
+            //app.UseForwardedHeaders();
+            //app.UseHttpsRedirection();
+            //}
+
+            app.UseHttpsRedirection();            
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 
             app.UseRouting();
-            app.UseCors(_corspolicy);
+            if (Settings.UseCors)
+            {
+                app.UseCors(Settings.CorsPolicy);
+            }
 
             app.UseIdentityServer();
             app.UseAuthentication();
